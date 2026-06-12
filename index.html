@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outil de Cartographie des Flux de Travail pour Artistes Indépendants | Votre Atelier Numérique</title>
+    <meta name="description" content="Visualisez et optimisez vos processus créatifs et administratifs en tant qu">
+    <style>
+        :root {
+            --primary-color: #7a1ba6; /* Adjusted for zine-noise vibe, bold */
+            --secondary-color: #F0F0F0;
+            --accent-color: #ff5722; /* Expressive */
+            --text-color: #333;
+            --light-text-color: #555;
+            --background-color: #fcfafa; /* Luxury neutral */
+            --card-background: #ffffff;
+            --border-radius: 8px;
+            --font-sans: 'Helvetica Neue', Arial, sans-serif; /* Soft premium sans-serif */
+        }
+        body {
+            font-family: var(--font-sans);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background: var(--background-color);
+            background: linear-gradient(135deg, var(--background-color) 0%, #e0e0e0 100%); /* Soft gradient */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 2.5em 1.5em;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            font-size: 2.8em; /* Controlled scale jump */
+            margin-bottom: 0.5em;
+            font-weight: 700;
+        }
+        header p {
+            font-size: 1.2em;
+            max-width: 800px;
+            margin: 0.5em auto 0;
+            opacity: 0.9;
+        }
+        main {
+            flex-grow: 1;
+            padding: 2em 1.5em;
+            max-width: 1200px;
+            margin: 2em auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2em;
+        }
+        .card {
+            background-color: var(--card-background);
+            padding: 2em;
+            border-radius: var(--border-radius);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08); /* Tactile depth */
+            border-top: 5px solid var(--primary-color);
+            transition: transform 0.2s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h2 {
+            color: var(--primary-color);
+            font-size: 1.8em;
+            margin-top: 0;
+            margin-bottom: 1em;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.6em;
+            font-weight: bold;
+            color: var(--light-text-color);
+        }
+        input[type="text"], textarea {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin-bottom: 1.5em;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+            display: block;
+            width: fit-content;
+            margin-top: 1.5em;
+        }
+        button:hover {
+            background-color: #6a1892; /* Slightly darker primary */
+            transform: translateY(-2px);
+        }
+        #tool-result {
+            background-color: var(--card-background);
+            padding: 2em;
+            border-radius: var(--border-radius);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border-top: 5px solid var(--accent-color);
+            margin-top: 2em;
+            grid-column: 1 / -1; /* Spans full width */
+            display: none; /* Hidden until results are ready */
+        }
+        #tool-result h3 {
+            color: var(--accent-color);
+            font-size: 1.6em;
+            margin-bottom: 1em;
+        }
+        #tool-result div {
+            margin-bottom: 1.5em;
+            border-bottom: 1px dashed #eee;
+            padding-bottom: 1.5em;
+        }
+        #tool-result div:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        #tool-result ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 0.8em;
+        }
+        #tool-result li {
+            background-color: #f9f9f9;
+            padding: 10px 15px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px;
+            border-radius: 4px;
+            font-size: 0.95em;
+            word-wrap: break-word;
+        }
+        .section-title {
+            color: var(--primary-color);
+            font-size: 2em;
+            text-align: center;
+            margin: 2em 0 1em;
+            font-weight: 700;
+        }
+        .info-panel {
+            background-color: var(--card-background);
+            padding: 2em;
+            border-radius: var(--border-radius);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            border-top: 5px solid #a821bd; /* Unique color from design seed */
+        }
+        .info-panel h3 {
+            color: #a821bd;
+            font-size: 1.5em;
+            margin-top: 0;
+        }
+        .info-panel p {
+            color: var(--light-text-color);
+            font-size: 0.95em;
+        }
+        footer {
+            background-color: var(--text-color);
+            color: white;
+            text-align: center;
+            padding: 3em 1.5em;
+            margin-top: 4em;
+            font-size: 0.9em;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+        }
+        footer h3 {
+            color: var(--secondary-color);
+            margin-bottom: 1em;
+            font-size: 1.4em;
+        }
+        footer p {
+            max-width: 900px;
+            margin: 1em auto;
+            line-height: 1.8;
+            opacity: 0.9;
+        }
+        footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        footer a:hover {
+            color: #ff8c00;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+            header p {
+                font-size: 1em;
+            }
+            main {
+                grid-template-columns: 1fr;
+                padding: 1.5em;
+                margin: 1.5em auto;
+            }
+            .card {
+                padding: 1.5em;
+            }
+            .card h2 {
+                font-size: 1.5em;
+            }
+            input[type="text"], textarea {
+                width: 100%;
+            }
+            button {
+                width: 100%;
+                text-align: center;
+            }
+            .section-title {
+                font-size: 1.7em;
+            }
+        }
+    </style>
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://outil-de-cartographie-des-flux-de-travail-pour-49f45fde.onrender.com">
+    <meta property="og:title" content="Outil de Cartographie des Flux de Travail pour Artistes Indépendants">
+    <meta property="og:description" content="Visualisez et optimisez vos processus créatifs et administratifs en tant qu">
+    <meta property="og:url" content="https://outil-de-cartographie-des-flux-de-travail-pour-49f45fde.onrender.com">
+    <meta property="og:type" content="website">
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "Outil de Cartographie des Flux de Travail pour Artistes Indépendants", "description": "Visualisez et optimisez vos processus créatifs et administratifs en tant qu", "url": "https://outil-de-cartographie-des-flux-de-travail-pour-49f45fde.onrender.com", "applicationCategory": "UtilityApplication", "operatingSystem": "Web Browser"}</script>
+</head>
+<body data-site-slug="outil-de-cartographie-des-flux-de-travail-pour-49f45fde" data-runtime-mode="analysis_tool">
+    <header>
+        <h1>Outil de Cartographie des Flux de Travail pour Artistes Indépendants</h1>
+        <p>Visualisez et optimisez vos processus créatifs et administratifs. Identifiez les goulets d'étranglement, gagnez du temps et libérez votre potentiel artistique.</p>
+    </header>
+
+    <main>
+        <div class="card">
+            <h2>Votre Atelier Numérique</h2>
+            <p>Décrivez votre processus. De l'idée à la vente, chaque étape compte. Plus vous êtes précis, plus nos suggestions seront pertinentes.</p>
+            <form id="tool-form">
+                <label for="artiste-domaine">Votre domaine artistique principal :</label>
+                <input type="text" id="artiste-domaine" placeholder="Ex: Peinture, Sculpture, Musique, Photographie..." required>
+
+                <label for="processus-creatif">Décrivez les grandes étapes de votre processus créatif (séparées par des virgules) :</label>
+                <textarea id="processus-creatif" placeholder="Ex: Idéation, Esquisse, Production, Finition, Documentation..." required></textarea>
+
+                <label for="processus-administratif">Décrivez vos tâches administratives ou de vente (séparées par des virgules) :</label>
+                <textarea id="processus-administratif" placeholder="Ex: Communication client, Facturation, Marketing, Gestion des stocks, Expédition..." required></textarea>
+
+                <label for="defis">Quels sont vos principaux défis actuels ? (optionnel)</label>
+                <input type="text" id="defis" placeholder="Ex: Manque de temps pour le marketing, difficultés à fixer les prix...">
+                
+                <button type="submit" id="tool-submit">Cartographier Mon Flux</button>
+            </form>
+        </div>
+
+        <div class="info-panel">
+            <h3>Pourquoi cartographier votre flux ?</h3>
+            <p>En tant qu'artiste indépendant, jongler entre la création et la gestion est un art en soi. Notre outil vous aide à mettre en lumière chaque étape de votre parcours, identifiant les moments clés et les points faibles où l'énergie ou le temps est perdu. C'est le premier pas vers une efficacité accrue et plus de temps pour ce que vous aimez faire : créer.</p>
+            <p>Imaginez un processus fluide, moins de stress et plus de ventes. C'est à portée de main.</p>
+            <button data-affiliate-slot="premium-guide">Découvrir les bonnes pratiques</button>
+        </div>
+        
+        <div id="tool-result">
+            <h3 id="result-headline">Votre Cartographie Personnalisée : Suggestions & Optimisations</h3>
+            <p>Voici une visualisation simplifiée de votre flux de travail et des pistes pour l'améliorer.</p>
+
+            <div id="result-flux-creatif">
+                <h4>Flux Créatif Suggéré</h4>
+                <ul></ul>
+            </div>
+
+            <div id="result-flux-administratif">
+                <h4>Flux Administratif & Commercial Suggéré</h4>
+                <ul></ul>
+            </div>
+
+            <div id="result-optimisations">
+                <h4>Pistes d'Optimisation Générales</h4>
+                <ul></ul>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <h3>Artistes, Libérez Votre Temps Précieux</h3>
+        <p>Dans un monde où chaque artiste doit être un entrepreneur, la gestion efficace de son temps et de ses ressources est primordiale. Cet outil est conçu pour les créateurs français, qu'ils soient peintres, sculpteurs, musiciens, photographes ou artisans d'art. Que vous cherchiez à optimiser votre <a href="#seo-flux-creatif">processus créatif</a>, à améliorer votre <a href="#seo-gestion-administrative-artiste">gestion administrative</a>, ou à mieux organiser votre <a href="#seo-vente-oeuvres-art">vente d'œuvres d'art</a>, notre plateforme vous offre une vision claire et des solutions concrètes.</p>
+        <p>Découvrez comment structurer votre <a href="#seo-workflow-artiste">workflow d'artiste</a>, identifier les goulets d'étranglement et maximiser votre productivité. Pour les artistes indépendants en France, l'efficacité est la clé du succès et de l'épanouissement. Un outil simple pour des résultats concrets, pensé pour vous et votre art.</p>
+        <p>&copy; 2023 Tous droits réservés.</p>
+    </footer>
+
+    <script>
+        document.getElementById('tool-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const domaine = document.getElementById('artiste-domaine').value.trim();
+            const creatifInput = document.getElementById('processus-creatif').value.trim();
+            const administratifInput = document.getElementById('processus-administratif').value.trim();
+            const defis = document.getElementById('defis').value.trim();
+
+            const processusCreatif = creatifInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
+            const processusAdministratif = administratifInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
+
+            const resultCreatifUl = document.querySelector('#result-flux-creatif ul');
+            const resultAdministratifUl = document.querySelector('#result-flux-administratif ul');
+            const resultOptimisationsUl = document.querySelector('#result-optimisations ul');
+
+            resultCreatifUl.innerHTML = '';
+            resultAdministratifUl.innerHTML = '';
+            resultOptimisationsUl.innerHTML = '';
+
+            // Generate Creative Flow
+            const baseCreativeSteps = ['Idée / Inspiration', 'Recherche / Planification', 'Ébauche / Première version', 'Production / Réalisation', 'Détails / Finition', 'Critique / Auto-évaluation', 'Documentation (photos, notes)'];
+            processusCreatif.forEach(step => {
+                const li = document.createElement('li');
+                li.textContent = step;
+                resultCreatifUl.appendChild(li);
+            });
+            baseCreativeSteps.filter(step => !processusCreatif.includes(step)).forEach(step => {
+                const li = document.createElement('li');
+                li.textContent = step + ' (à considérer)';
+                li.style.fontStyle = 'italic';
+                li.style.color = '#777';
+                resultCreatifUl.appendChild(li);
+            });
+
+            // Generate Administrative Flow
+            const baseAdminSteps = ['Communication initiale', 'Établissement du devis', 'Contrat (si applicable)', 'Suivi de production', 'Facturation', 'Paiement', 'Expédition / Livraison', 'Communication post-vente'];
+            processusAdministratif.forEach(step => {
+                const li = document.createElement('li');
+                li.textContent = step;
+                resultAdministratifUl.appendChild(li);
+            });
+            baseAdminSteps.filter(step => !processusAdministratif.includes(step)).forEach(step => {
+                const li = document.createElement('li');
+                li.textContent = step + ' (à ne pas oublier)';
+                li.style.fontStyle = 'italic';
+                li.style.color = '#777';
+                resultAdministratifUl.appendChild(li);
+            });
+
+            // Generate Optimizations
+            const optimisations = [];
+
+            // Based on domain
+            if (domaine.toLowerCase().includes('peinture') || domaine.toLowerCase().includes('sculpture')) {
+                optimisations.push("Considérez la gestion de l'inventaire de vos matériaux et œuvres.");
+                optimisations.push("Pensez à des techniques de séchage ou de conservation pour optimiser l'espace et le temps.");
+            } else if (domaine.toLowerCase().includes('musique')) {
+                optimisations.push("Explorez des outils de gestion de projet pour vos compositions et enregistrements.");
+                optimisations.push("Automatisez la distribution de votre musique sur les plateformes.");
+            } else if (domaine.toLowerCase().includes('photographie')) {
+                optimisations.push("Mettez en place un système de sauvegarde et d'organisation pour vos fichiers RAW.");
+                optimisations.push("Utilisez des presets pour accélérer votre post-traitement.");
+            }
+
+            // General optimizations
+            if (processusCreatif.length < 4) {
+                optimisations.push("Détaillez davantage vos étapes créatives pour mieux visualiser les phases distinctes.");
+            }
+            if (processusAdministratif.length < 4) {
+                optimisations.push("Pensez à inclure le marketing et le suivi client comme des étapes à part entière.");
+            }
+            if (creatifInput.includes('documentation') && !administratifInput.includes('marketing')) {
+                optimisations.push("Exploitez votre documentation créative pour vos efforts marketing sur les réseaux sociaux.");
+            }
+            if (administratifInput.includes('facturation') && !administratifInput.includes('devis')) {
+                optimisations.push("Assurez-vous de bien formaliser vos devis avant la facturation pour éviter les malentendus.");
+            }
+            if (defis.toLowerCase().includes('temps marketing') || defis.toLowerCase().includes('promotion')) {
+                optimisations.push("Dédiez des créneaux fixes pour le marketing chaque semaine et explorez des outils de planification de contenu.");
+            }
+            if (defis.toLowerCase().includes('prix') || defis.toLowerCase().includes('rémunération')) {
+                optimisations.push("Faites une étude de marché pour vos prix et prenez en compte tous vos coûts (matériaux, temps, charges).");
+            }
+            if (processusAdministratif.includes('expédition')) {
+                optimisations.push("Recherchez des solutions logistiques pour artistes, optimisant coûts et sécurité pour vos envois.");
+            }
+
+            // Fallback if no specific optimizations
+            if (optimisations.length === 0) {
+                optimisations.push("Toutes les étapes semblent bien intégrées ! Continuez d'analyser chaque point pour des gains marginaux.");
+                optimisations.push("Envisagez d'utiliser des outils de gestion de projet pour suivre l'avancement de vos œuvres.");
+            }
+
+            optimisations.forEach(opt => {
+                const li = document.createElement('li');
+                li.textContent = opt;
+                resultOptimisationsUl.appendChild(li);
+            });
+
+            document.getElementById('tool-result').style.display = 'block';
+            window.scrollTo({
+                top: document.getElementById('tool-result').offsetTop - 50,
+                behavior: 'smooth'
+            });
+        });
+    </script>
+<div id="qa-smoke-result" hidden></div>
+<script id="farmbuilder-affiliate-helper">
+(function () {
+  window.__UTILITY_AFFILIATE_MAP = window.__UTILITY_AFFILIATE_MAP || {};
+  document.addEventListener("click", function (event) {
+    const target = event.target.closest("[data-affiliate-slot]");
+    if (!target) return;
+    const slot = target.getAttribute("data-affiliate-slot");
+    const href = window.__UTILITY_AFFILIATE_MAP[slot];
+    if (!href) return;
+    if (target.tagName && target.tagName.toLowerCase() === "a") {
+      target.setAttribute("href", href);
+      target.removeAttribute("rel");
+      return;
+    }
+    event.preventDefault();
+    window.open(href, "_blank");
+  }, true);
+})();
+</script>
+<script id="farmbuilder-functional-qa">
+(function () {
+  function marker() {
+    let node = document.getElementById("qa-smoke-result");
+    if (node) return node;
+    node = document.createElement("div");
+    node.id = "qa-smoke-result";
+    node.hidden = true;
+    document.body.appendChild(node);
+    return node;
+  }
+
+  let qaFinished = false;
+  let qaWatchdog = null;
+
+  function normalize(text) {
+    return String(text || "").replace(/\s+/g, " ").trim();
+  }
+
+  function findForm() {
+    return document.getElementById("tool-form") || document.querySelector("form");
+  }
+
+  function findResult() {
+    return (
+      document.getElementById("tool-result") ||
+      document.querySelector("[data-result]") ||
+      document.querySelector(".tool-result, .result-card, .result, .results, .output, .preview, .diagnostic, .analysis")
+    );
+  }
+
+  function primaryAction(form) {
+    if (!form) return null;
+    return (
+      document.getElementById("tool-submit") ||
+      form.querySelector("#tool-submit") ||
+      form.querySelector("[data-primary-action]") ||
+      form.querySelector("button[type=submit]") ||
+      form.querySelector("button") ||
+      form.querySelector("input[type=submit]")
+    );
+  }
+
+  function resultSignature(node) {
+    if (!node) return "";
+    const text = normalize(node.textContent);
+    const html = normalize(node.innerHTML).slice(0, 600);
+    return `${text}||${html}`;
+  }
+
+  function resultHeadline(node) {
+    if (!node) return "";
+    const heading = node.querySelector("h1, h2, h3, strong, b");
+    return normalize(heading ? heading.textContent : "");
+  }
+
+  function sampleText(field) {
+    const key = `${field.id || ""} ${field.name || ""} ${field.placeholder || ""}`.toLowerCase();
+    if (/email/.test(key)) return "bonjour@example.com";
+    if (/url|site|website|lien/.test(key)) return "https://example.com/offre-solaire";
+    if (/phone|tel|mobile/.test(key)) return "0612345678";
+    if (/ville|city|localisation|location|region|departement|postal/.test(key)) return "Paris";
+    if (/orientation/.test(key)) return "sud";
+    if (/keyword|theme|topic|sujet|subject/.test(key)) return "energie solaire domestique";
+    if (/titre|title/.test(key)) return "Simulateur solaire maison";
+    if (/nom|name|project/.test(key)) return "Projet Horizon";
+    if (/description|notes|content|message/.test(key)) return "Maison individuelle exposee sud avec toiture exploitable.";
+    return field.placeholder || "France";
+  }
+
+  function sampleNumber(field) {
+    const key = `${field.id || ""} ${field.name || ""}`.toLowerCase();
+    if (/inclinaison|angle|slope/.test(key)) return "30";
+    if (/surface|size|m2|sqm/.test(key)) return "28";
+    if (/annee|year/.test(key)) return "2024";
+    if (/prix|price|budget|cost|amount|montant/.test(key)) return "12000";
+    const min = Number(field.min || "");
+    const max = Number(field.max || "");
+    if (Number.isFinite(min) && Number.isFinite(max) && max >= min) {
+      return String(Math.min(max, Math.max(min, min + Math.round((max - min) * 0.35))));
+    }
+    if (Number.isFinite(min)) return String(Math.max(min, 12));
+    if (Number.isFinite(max)) return String(Math.min(max, 12));
+    return field.value || "12";
+  }
+
+  function applySample(field) {
+    const tag = (field.tagName || "").toLowerCase();
+    const type = (field.type || "").toLowerCase();
+    if (field.disabled) return;
+    if (type === "hidden" || type === "submit" || type === "button" || type === "reset" || type === "image" || type === "file") {
+      return;
+    }
+    const currentValue = normalize(field.value);
+    if (tag === "select") {
+      if (currentValue) return;
+      const option = Array.from(field.options || []).find((item) => item.value && !item.disabled) || field.options[0];
+      if (option) field.value = option.value;
+      return;
+    }
+    if (type === "checkbox") {
+      if (field.checked) return;
+      field.checked = true;
+      return;
+    }
+    if (type === "radio") {
+      if (field.checked) return;
+      field.checked = true;
+      return;
+    }
+    if (type === "date") {
+      if (currentValue) return;
+      field.value = "2026-03-01";
+      return;
+    }
+    if (type === "email") {
+      if (currentValue) return;
+      field.value = "bonjour@example.com";
+      return;
+    }
+    if (type === "url") {
+      if (currentValue) return;
+      field.value = "https://example.com/offre-solaire";
+      return;
+    }
+    if (type === "tel") {
+      if (currentValue) return;
+      field.value = "0612345678";
+      return;
+    }
+    if (type === "color") {
+      if (currentValue) return;
+      field.value = "#2f855a";
+      return;
+    }
+    if (type === "number" || type === "range") {
+      if (currentValue) return;
+      field.value = sampleNumber(field);
+      return;
+    }
+    if (currentValue) return;
+    field.value = sampleText(field);
+  }
+
+  function stamp(status, detail, headline, primary) {
+    if (qaFinished) return;
+    qaFinished = true;
+    if (qaWatchdog) {
+      window.clearTimeout(qaWatchdog);
+      qaWatchdog = null;
+    }
+    const node = marker();
+    node.dataset.status = status;
+    node.dataset.mode = "native-form";
+    node.dataset.detail = detail || "";
+    node.dataset.headline = headline || "";
+    node.dataset.primary = primary || "";
+    node.dataset.viewport = window.innerWidth <= 640 ? "mobile" : "desktop";
+    window.setTimeout(function () {
+      try {
+        window.stop();
+      } catch (_error) {}
+    }, 0);
+  }
+
+  function installModalGuards() {
+    const noop = function () {};
+    const approve = function () { return true; };
+    const empty = function () { return ""; };
+    try { window.alert = noop; } catch (_error) {}
+    try { window.confirm = approve; } catch (_error) {}
+    try { window.prompt = empty; } catch (_error) {}
+  }
+
+  function triggerAction(form, action) {
+    try {
+      if (typeof form.requestSubmit === "function") {
+        form.requestSubmit(action || undefined);
+        return;
+      }
+    } catch (_error) {}
+    if (action && typeof action.click === "function") {
+      action.click();
+      return;
+    }
+    form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+  }
+
+  function inspectResult(before, attemptsLeft) {
+    const result = findResult();
+    if (!result) {
+      stamp("fail", "La zone de resultat est introuvable.", "");
+      return;
+    }
+    const after = resultSignature(result);
+    const text = normalize(result.textContent);
+    if (after && after !== before && text.length >= 24) {
+      const primary = result.querySelector("a[href], button[data-href], [data-primary-url]") || document.querySelector("#tool-result a[href]");
+      stamp("pass", "Le formulaire natif a mis a jour la zone de resultat.", resultHeadline(result), primary ? (primary.getAttribute("href") || primary.getAttribute("data-primary-url") || "") : "");
+      return;
+    }
+    if (attemptsLeft > 0) {
+      window.setTimeout(function () {
+        inspectResult(before, attemptsLeft - 1);
+      }, 250);
+      return;
+    }
+    stamp("fail", "La zone de resultat n'a pas renvoye de contenu exploitable.", resultHeadline(result));
+  }
+
+  function runSmoke() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("__qa") !== "functional") return;
+    qaWatchdog = window.setTimeout(function () {
+      stamp("fail", "QA smoke timed out before the page reported a usable result.", "");
+    }, 7000);
+    const form = findForm();
+    if (!form) {
+      stamp("fail", "Le formulaire principal est introuvable.", "");
+      return;
+    }
+    const result = findResult();
+    const before = resultSignature(result);
+    installModalGuards();
+    try {
+      form.querySelectorAll("input, select, textarea").forEach(applySample);
+    } catch (error) {
+      stamp("fail", error && error.message ? `QA smoke sample failed: ${error.message}` : "QA smoke sample failed before submit.", "");
+      return;
+    }
+    const action = primaryAction(form);
+    try {
+      triggerAction(form, action);
+    } catch (error) {
+      stamp("fail", error && error.message ? `QA smoke submit failed: ${error.message}` : "QA smoke submit failed.", "");
+      return;
+    }
+    inspectResult(before, 10);
+  }
+
+  window.addEventListener("error", function (event) {
+    const message = event && event.message ? event.message : "JavaScript runtime error during QA smoke.";
+    stamp("fail", `QA smoke JS error: ${message}`, "");
+  }, { once: true });
+
+  window.addEventListener("unhandledrejection", function (event) {
+    const reason = event && event.reason;
+    const detail = typeof reason === "string"
+      ? reason
+      : reason && reason.message
+        ? reason.message
+        : "Unhandled promise rejection during QA smoke.";
+    stamp("fail", `QA smoke rejection: ${detail}`, "");
+  }, { once: true });
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      window.setTimeout(runSmoke, 60);
+    }, { once: true });
+  } else {
+    window.setTimeout(runSmoke, 60);
+  }
+})();
+</script>
+</body>
+</html>
